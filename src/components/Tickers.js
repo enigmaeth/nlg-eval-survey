@@ -74,6 +74,14 @@ class Tickers extends Component {
     render() {
         let sButton = "";
         let instr = "";
+        let end = <div>
+            <br/><br/>
+            <span>
+            Thanks for giving your input!
+            </span>
+            <br/><br/>
+            - <a href="https://enigmaeth.github.io/about"> Afroz</a>
+        </div>
         if(this.state.line_counter > 0){
             instr = <p> These are sentences from Harry Potter books. For each sentence, give a rating on a scale of 1 through 5
             if you think that the sentence seems like it must be from the books or if it seems like it must be
@@ -87,7 +95,7 @@ class Tickers extends Component {
         }
         else{
             sButton = this.stopShow();
-            return "Thanks for giving your input!";
+            return end;
         }
         return(
             <div>
