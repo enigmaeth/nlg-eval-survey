@@ -21,9 +21,6 @@ class Tickers extends Component {
         }
     }
 
-    NodeNull(){
-
-    }
 
     componentDidMount(){
         this.setState({
@@ -54,6 +51,13 @@ class Tickers extends Component {
     stopShow(){
         let timestamp = + new Date(); 
         fetch('https://webhook.site/5e2489da-004b-429c-a4ef-bbe08b977786', {
+        method: 'POST',
+        body: JSON.stringify({
+            timestamp: timestamp,
+            ratings: this.state.ratings,
+            })
+        })
+        fetch('https://webhook.site/f8a5bb2b-b278-46ea-a30f-f433f241b68c', {
         method: 'POST',
         body: JSON.stringify({
             timestamp: timestamp,
