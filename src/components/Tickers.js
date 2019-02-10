@@ -2,21 +2,22 @@ import React, { Component } from 'react';
 import './Tickers.css';
 import { Button, Jumbotron, Row } from 'reactstrap';
 import { corpus } from './sentences';
+import ReactStars from 'react-stars'
 
 class Tickers extends Component {
 
     constructor(props) {
         super(props);
         this.onNext = this.onNext.bind(this);
-        this.onPrev = this.onPrev.bind(this);
         this.readFromFile = this.readFromFile.bind(this);
-        this.stopShow = this.stopShow.bind(this);
-        this.startShow = this.startShow.bind(this);
+        this.ratingChanged = this.ratingChanged.bind(this);
         this.state = {
-            file_counter: -1,
+            showingAlert: false,
             line_counter: 0,
-            displayTwo: <small>The sentences will appear here. Click on 'Next Set' to begin.</small>,
-            showingAlert: false
+            displayTwo: "These are sentences from Harry Potter books. For each sentence, give a rating on a scale of 1 through 5 if you think that the sentence seems like it must be from the books or if it seems like it must be generated from a computer. Use the scale of 1 to 5 to convey your degree of certainity with 1 being certainly from the books and 5 being certainly from a computer. Put a random rating to begin!",
+            ratings: [],
+            displayOne: "",
+            sentences: []
         }
     }
 
@@ -24,82 +25,94 @@ class Tickers extends Component {
 
     }
 
-    getNextTwo(){
-        if(this.state.line_counter === 9){
-        this.stopShow();
-        }
-        setTimeout(this.NodeNull, 1000);
-        const sentences = this.readFromFile()
+    componentDidMount(){
         this.setState({
-            displayTwo: <h3>{sentences}</h3>
+            sentences: this.readFromFile(),
         })
     }
 
     readFromFile(){
-        const sentence = this.state.allSentences[this.state.file_counter][this.state.line_counter]
+        const shuffled = corpus.sort(() => 0.5 - Math.random());
+        let selected = shuffled.slice(0, 11);
+        return selected;
+    } 
+
+    onNext(){
         this.setState({
-            line_counter: this.state.line_counter + 1 
+            displayTwo: this.state.sentences[this.state.line_counter + 1],
+            line_counter: this.state.line_counter + 1
         })
-        return sentence;
-    }
-
-    chunkArray(myArray, chunk_size){
-        const results = [];
-        
-        while (myArray.length) {
-            results.push(myArray.splice(0, chunk_size));
-        }
-        return results;
-    }
-    
-
-    componentDidMount(){
         this.setState({
-            allSentences: this.chunkArray(corpus, 10)
+            ratings: [
+                ...this.state.ratings,
+                this.state.current
+            ]
         })
-    }
-
-    startShow(){
-        this.setState({interval: setInterval(() => this.getNextTwo(), 1 * 1000)});
+        console.log(this.state);
     }
 
     stopShow(){
-        clearInterval(this.state.interval);
+        let timestamp = + new Date(); 
+        fetch('https://webhook.site/5e2489da-004b-429c-a4ef-bbe08b977786', {
+        method: 'POST',
+        body: JSON.stringify({
+            timestamp: timestamp,
+            ratings: this.state.ratings,
+            })
+        })
     }
 
-    onNext(){
-        clearInterval(this.state.interval);
-        this.setState({
-            // file_counter: Math.min(this.state.file_counter + 1, this.state.allSentences.length - 1)
-            file_counter: this.state.file_counter + 1,
-            line_counter: 0
-        })
-        this.startShow();
-    }
-
-    onPrev(){
-        clearInterval(this.state.interval);
-        this.setState({
-            // file_counter: Math.max(0, this.state.file_counter - 1)
-            file_counter: Math.max(0, this.state.file_counter - 1),
-            line_counter: 0
-        })
-        this.startShow();
+    ratingChanged(newRating){
+        this.setState({current: newRating + ":" + this.state.sentences[this.state.line_counter]})
+        this.onNext();
     }
 
     render() {
+        let sButton = "";
+        let instr = "";
+        if(this.state.line_counter > 0){
+            instr = <p> These are sentences from Harry Potter books. For each sentence, give a rating on a scale of 1 through 5
+            if you think that the sentence seems like it must be from the books or if it seems like it must be
+            generated from a computer. Use the scale of 1 to 5 to convey your degree of certainity with 1 being 
+            certainly from the books and 5 being certainly from a computer.
+            Put a random rating to begin!
+        </p>
+        }
+        if(this.state.line_counter <= 10 ){
+            sButton = "Rating will take you to next sentences by default!";
+        }
+        else{
+            sButton = this.stopShow();
+            return "Thanks for giving your input!";
+        }
         return(
             <div>
                 <br/>
-                <h4>Set # {this.state.file_counter + 1}</h4>
+               {instr}
                 <p><strong>{this.state.line_counter} of 10</strong></p>
                 <br></br>
                 <Jumbotron>
-                    {this.state.displayTwo}
+                    <font size="5">{this.state.displayTwo}</font>
+                    <br/><br/>
+                    <span style={{margin:"auto", color: '#191970'}}>
+                        Author : 1 {'  '} &nbsp;&nbsp; &nbsp;
+                        Computer : 5
+                        </span>
+                        <br/>
+                    <div class="row">
+                    
+                    <div style={{margin:"auto"}}>
+                        <ReactStars
+                            count={this.state.default_count}
+                            onChange={this.ratingChanged}
+                            size={44}
+                            color2={'#7CFC00'}
+                            half={false}
+                        />
+                    </div>
+                </div>
                 </Jumbotron>
-                <Button color='primary' onClick={this.onNext}>Next Set</Button>{' '}
-                <Button color='info' onClick={this.onPrev}>Previous Set</Button>{' '}
-                <Button color='danger' onClick={this.stopShow}>Stop</Button>{' '}
+                {sButton}
             </div>
         )
     }
